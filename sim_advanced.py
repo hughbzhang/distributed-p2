@@ -44,6 +44,7 @@ def run_vm(processer_id):
     while True:
         try:
             #print('a' + str(processer_id))
+            # TODO: THE LINE BELOW THROWS EXCEPTIONS SOMETIMES
             Client, address = server_socket.accept()
             #print('b' + str(processer_id))
             #print('Connected received by {}, to: '.format(processer_id) + address[0] + ':' + str(address[1]))
