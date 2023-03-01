@@ -3,14 +3,16 @@ import random
 import time
 import socket
 import multiprocessing
-import asyncio
 
-PROCESSER_SPEED = [1, 5, 10]
-NUM_PROCESSERS = len(PROCESSER_SPEED)
+
+MIN_SPEED = 1
+MAX_SPEED = 6
+NUM_PROCESSERS = 3
+PROCESSER_SPEED = [random.randint(MIN_SPEED, MAX_SPEED) for _ in range(NUM_PROCESSERS)]
 DURATION = 6
 
-HOST = "localhost"  # Standard loopback interface address (localhost)
-PORTS = [65432, 65433, 65434]
+HOST = "localhost"  
+PORTS = [6543, 6542, 6541]
 
 
 def get_action():
@@ -22,9 +24,9 @@ def get_action():
 
 
 
-def write_to_log(processer_id, message):
+def write_to_log(processer_id, message, data, clock):
     with open("logs/{}.txt".format(processer_id), "a") as f:
-        f.write(message + " " + str(time.time()) + "\n")
+        f.write(",".join([message, str(processer_id), str(data), str(clock), str(time.time())])+"\n")
 
 def run_vm(processer_id):
     queue = []
@@ -41,20 +43,22 @@ def run_vm(processer_id):
 
     while True:
         try:
+            #print('a' + str(processer_id))
             Client, address = server_socket.accept()
+            #print('b' + str(processer_id))
             #print('Connected received by {}, to: '.format(processer_id) + address[0] + ':' + str(address[1]))
 
             # Receive message from client
-            data = Client.recv(2048)
+            with Client:
+                while True:
+                    data = Client.recv(2048)
+                    if data:
+                        queue.append(data.decode('utf-8').split(','))
+                        break
             
-            if data:
-                #response = 'In process {} received '.format(processer_id) + data.decode('utf-8')
-                #print(response)
-                
-                queue.append(data.decode('utf-8').split(','))
-            Client.close()
-        except:
-            pass
+        except Exception as e:
+            #print(e)
+            print("No incoming message")
 
         start = time.time()
         end = start + 1
@@ -65,7 +69,7 @@ def run_vm(processer_id):
                 new_clock = int(queue.pop(0)[-1])
                 clock += 1
                 clock = max(clock, new_clock)
-                write_to_log(processer_id, "Received message at local time {}, queue length {}".format(clock, len(queue)))
+                write_to_log(processer_id, "recv", len(queue), clock)
             
             else:
                 action = get_action()
@@ -77,14 +81,14 @@ def run_vm(processer_id):
                         first_socket.send(str.encode('{},{},{}'.format(action,processer_id,clock)))
                         first_socket.close()
                         clock+=1
-                        write_to_log(processer_id, "Sent message {} at local time {}".format(action, clock))
+                        write_to_log(processer_id, "sent", action , clock)
                     elif action == 2:
                         second_socket = socket.socket()
                         second_socket.connect((HOST, PORTS[(processer_id+2)%3]))
                         second_socket.send(str.encode('{},{},{}'.format(action,processer_id,clock)))
                         second_socket.close()
                         clock+=1
-                        write_to_log(processer_id, "Sent message {} at local time {}".format(action, clock))  
+                        write_to_log(processer_id, "sent", action , clock)  
                     elif action == 3:
                         first_socket = socket.socket()
                         first_socket.connect((HOST, PORTS[(processer_id+1)%3]))
@@ -95,18 +99,15 @@ def run_vm(processer_id):
                         second_socket.send(str.encode('{},{},{}'.format(action,processer_id,clock)))
                         second_socket.close()
                         clock+=1
-                        write_to_log(processer_id, "Sent double message {} at local time {}".format(action, clock))  
+                        write_to_log(processer_id, "sent2", action , clock)  
                     else:
                         clock+=1
-                        write_to_log(processer_id, "Internal action at local time {}".format(clock))
+                        write_to_log(processer_id, "internal", action , clock)
         
         if time.time() < end:
             time.sleep(end - time.time())   
     server_socket.close()
     
-
-
-
 
 
 if __name__ == '__main__':
@@ -120,7 +121,7 @@ if __name__ == '__main__':
     
     vms = [multiprocessing.Process(target=run_vm, args=(i,)) for i in range(3)]
 
-    print("starting vms")
+    print("starting vms, clock speeds: " + str(PROCESSER_SPEED))
     for vm in vms:
         vm.start()
 

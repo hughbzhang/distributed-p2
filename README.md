@@ -1,14 +1,50 @@
-# distributed-p2
+# CS262 Spring 2023: Design Exercise 2
+
+Authors: Prayaag Venkat, Hugh Zhang
+
+## Description
+
+A model of a small, asynchronous distributed system. It contains three model machines, each running at different clock speeds. The machines send messages to each other at random and maintain logical clocks.
+
+## Setup
+
+Dependencies:
+- Python 3
+- os
+- random
+- time
+- socket
+- multiprocessing
+
+## Running the simulation
+
+1. Make sure you have dependencies.
+2. Run sim_advanced.py. It will print some status messages as well as the randomly chosen clock speeds for the three machines.
+3. The results are stored in a folder called logs.
+
+## Interpreting the log files
+
+Each time sim_advanced.py is run, the logs folder is deleted and re-created fresh. The logs folder contains 3 files: 0.txt, 1.txt, 2.txt which store the logged information from Machines 0, 1, 2, respectively.
+
+The individual log files are formatted as follows:
+- Each line corresponds to an event (e.g. send, receive message, internal action)
+- Each line contains the following information about an event, comma-separated:
+    - Event type (send message, receive message, or internal event)
+    - The id of the machine on which the event took place. This value is 0, 1 or 2.
+    - A piece of "data". 
+        - If the event was a received message, "data" is the number of remaining events in the queue.
+        - If the event was send a message or internal event, "data" is an int drawn uniformly at random from [1,10] whose meaning is specificied in the project description.
+    - The value of the logical clock for that event on that machine
+    - The global system time of the event
+
 
 
 # TODO
-- The (virtual) machine should listen on one or more sockets for such messages. Each of your virtual machines should connect to each of the other virtual machines so that messages can be passed between them
-- How to get global time?
-
-- Then, run the scale model at least 5 times
-- drift in the values of the local logical clocks in the different machines (you can get a god’s eye view because of the system time)
+- debug
+- Then, run the scale model at least 5 times; write observations
 - Collect in list and plot:
     - size of the jumps in the values for the logical clocks
     - drift in the values of the local logical clocks in the different machines
     - the impact different timings on such things as gaps in the logical clock values and length of the message queue.
--  try running it with a smaller variation in the clock cycles
+-  Vary parameters and repeat previous step
+- Document code

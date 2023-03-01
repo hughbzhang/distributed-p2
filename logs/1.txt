@@ -1,9 +1,6 @@
-Sent message 1 at local time 1 1677625768.867411
-Sent message 2 at local time 2 1677625768.8692482
-Sent message 1 at local time 3 1677625768.8707283
-Received message at local time 4, queue length 0 1677625769.8927817
-Received message at local time 5, queue length 0 1677625770.8932314
-Sent double message 3 at local time 6 1677625770.8954995
-Received message at local time 7, queue length 0 1677625771.8937037
-Received message at local time 12, queue length 0 1677625772.8942063
-Sent message 2 at local time 13 1677625772.8957787
+recv,1,0,1,1677686877.9703743
+recv,1,0,2,1677686878.9713724
+recv,1,0,3,1677686879.9738464
+recv,1,0,4,1677686880.977588
+recv,1,0,5,1677686881.9795096
+recv,1,0,6,1677686882.9816651
