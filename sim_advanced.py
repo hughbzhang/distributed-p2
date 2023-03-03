@@ -1,3 +1,10 @@
+""" Scale Model
+
+This script implements the scale model specification for CS 262 Design Exercise 2.
+The results of the simulation are stored in the logs folder.
+
+"""
+
 import os
 import random
 import time
@@ -5,37 +12,67 @@ import socket
 import multiprocessing
 
 
+""" Global parameters
+
+These encode the clock speeds and probability of internal events.
+"""
+
+# Clock speeds are integers between the these two values
 MIN_SPEED = 1
 MAX_SPEED = 2
+
+# Number of virtual machines
 NUM_PROCESSERS = 3
+
+# Randomly assign clock speeds to machines
 PROCESSER_SPEED = [random.randint(MIN_SPEED, MAX_SPEED) for _ in range(NUM_PROCESSERS)]
+
+# Length of simulation in seconds.
 DURATION = 60
+
+# Number of possible actions
 MAX_ACTIONS = 10
+
+# These actions correspond to sending a message to first neighbor
 FIRST = [1,2]
+
+# These actions correspond to sending a message to second neighbor
 SECOND = [3,4]
+
+# These actions correspond to sending a message to both neighbors
 BOTH = [5,6]
+
+# These actions correspond to sending a message. All other actions are internal events
 SEND = FIRST + SECOND + BOTH
 
+# Host and ports on which the 3 machines listen
 HOST = "localhost"  
 PORTS = [6543, 6542, 6541]
 
 
 def get_action():
-    
-    # Generate random int between 1 and 10 inclusive
+    """
+    Generates an action uniformly at random.
+    """
     action = random.randint(1, MAX_ACTIONS)
     return action
 
 
-
-
 def write_to_log(processer_id, message, data, clock):
+    """
+    Writes message to log. See documentation in README.md for formatting details.
+    """
     with open("logs/{}.txt".format(processer_id), "a") as f:
         f.write(",".join([message, str(processer_id), str(data), str(clock), str(time.time())])+"\n")
 
+
 def run_vm(processer_id):
-    queue = []
-    clock = 0
+    """
+    Executes the operations of one virtual machine.
+    """
+
+    queue = [] # Queue of unprocessed events
+    clock = 0 # Internal clock valuue
 
     # Create a socket to listen to
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -47,13 +84,10 @@ def run_vm(processer_id):
     time.sleep(1)
 
     while True:
+        # Add any incoming messages to the queue first
         try:
-            #print('a' + str(processer_id))
-            # TODO: THE LINE BELOW THROWS EXCEPTIONS SOMETIMES
             Client, address = server_socket.accept()
-            #print('b' + str(processer_id))
-            #print('Connected received by {}, to: '.format(processer_id) + address[0] + ':' + str(address[1]))
-
+            
             # Receive message from client
             with Client:
                 while True:
@@ -61,26 +95,30 @@ def run_vm(processer_id):
                     if data:
                         queue.append(data.decode('utf-8').split(','))
                         break
-            
         except Exception as e:
-            #print(e)
             print("No incoming message")
 
+        # Check current time; stop in 1 second
         start = time.time()
         end = start + 1
         
-         # loop over num_cycles    
+        # Execute clock speed number of instructions   
         for _ in  range(PROCESSER_SPEED[processer_id]):
+            # Process queued up event
             if len(queue) > 0:
                 new_clock = int(queue.pop(0)[-1])
                 clock += 1
                 clock = max(clock, new_clock)
                 write_to_log(processer_id, "recv", len(queue), clock)
             
+            # Queue is empty, so generate new event
             else:
                 action = get_action()
+                
+                # Action is of type send
                 if action in SEND:
-                    
+
+                    # Send to first neighbor
                     if action in FIRST:
                         first_socket = socket.socket()
                         first_socket.connect((HOST, PORTS[(processer_id+1)%3]))
@@ -88,6 +126,8 @@ def run_vm(processer_id):
                         first_socket.close()
                         clock+=1
                         write_to_log(processer_id, "sent", action , clock)
+
+                    # Send to second neighbor
                     elif action in SECOND:
                         second_socket = socket.socket()
                         second_socket.connect((HOST, PORTS[(processer_id+2)%3]))
@@ -95,6 +135,8 @@ def run_vm(processer_id):
                         second_socket.close()
                         clock+=1
                         write_to_log(processer_id, "sent", action , clock)  
+                    
+                    # Send to both
                     elif action in BOTH:
                         first_socket = socket.socket()
                         first_socket.connect((HOST, PORTS[(processer_id+1)%3]))
@@ -106,10 +148,13 @@ def run_vm(processer_id):
                         second_socket.close()
                         clock+=1
                         write_to_log(processer_id, "sent2", action , clock)  
+                
+                # Internal event
                 else:
                     clock+=1
                     write_to_log(processer_id, "internal", action , clock)
         
+        # Sleep until 1 second has not elapsed, before executing more instructions
         if time.time() < end:
             time.sleep(end - time.time())   
     server_socket.close()
@@ -117,20 +162,23 @@ def run_vm(processer_id):
 
 
 if __name__ == '__main__':
-    # Delete all log files
     
+    # Delete all log files if already exist   
     if not os.path.exists("logs"):
         os.mkdir("logs")
     else:
         for f in os.listdir("logs"):
             os.remove(os.path.join("logs", f))
     
-    vms = [multiprocessing.Process(target=run_vm, args=(i,)) for i in range(3)]
+    # Run machines in separate Processes
+    vms = [multiprocessing.Process(target=run_vm, args=(i,)) for i in range(NUM_PROCESSERS)]
 
+    # Start the machines
     print("starting vms, clock speeds: " + str(PROCESSER_SPEED))
     for vm in vms:
         vm.start()
 
+    # Break after DURATION number of seconds
     end = time.time() + DURATION
     while True:
         if time.time() > end:
