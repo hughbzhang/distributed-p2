@@ -6,10 +6,15 @@ import multiprocessing
 
 
 MIN_SPEED = 1
-MAX_SPEED = 6
+MAX_SPEED = 2
 NUM_PROCESSERS = 3
 PROCESSER_SPEED = [random.randint(MIN_SPEED, MAX_SPEED) for _ in range(NUM_PROCESSERS)]
-DURATION = 6
+DURATION = 60
+MAX_ACTIONS = 10
+FIRST = [1,2]
+SECOND = [3,4]
+BOTH = [5,6]
+SEND = FIRST + SECOND + BOTH
 
 HOST = "localhost"  
 PORTS = [6543, 6542, 6541]
@@ -18,7 +23,7 @@ PORTS = [6543, 6542, 6541]
 def get_action():
     
     # Generate random int between 1 and 10 inclusive
-    action = random.randint(1, 10)
+    action = random.randint(1, MAX_ACTIONS)
     return action
 
 
@@ -74,23 +79,23 @@ def run_vm(processer_id):
             
             else:
                 action = get_action()
-                if action in [1,2,3]:
+                if action in SEND:
                     
-                    if action == 1:
+                    if action in FIRST:
                         first_socket = socket.socket()
                         first_socket.connect((HOST, PORTS[(processer_id+1)%3]))
                         first_socket.send(str.encode('{},{},{}'.format(action,processer_id,clock)))
                         first_socket.close()
                         clock+=1
                         write_to_log(processer_id, "sent", action , clock)
-                    elif action == 2:
+                    elif action in SECOND:
                         second_socket = socket.socket()
                         second_socket.connect((HOST, PORTS[(processer_id+2)%3]))
                         second_socket.send(str.encode('{},{},{}'.format(action,processer_id,clock)))
                         second_socket.close()
                         clock+=1
                         write_to_log(processer_id, "sent", action , clock)  
-                    elif action == 3:
+                    elif action in BOTH:
                         first_socket = socket.socket()
                         first_socket.connect((HOST, PORTS[(processer_id+1)%3]))
                         first_socket.send(str.encode('{},{},{}'.format(action,processer_id,clock)))
@@ -101,9 +106,9 @@ def run_vm(processer_id):
                         second_socket.close()
                         clock+=1
                         write_to_log(processer_id, "sent2", action , clock)  
-                    else:
-                        clock+=1
-                        write_to_log(processer_id, "internal", action , clock)
+                else:
+                    clock+=1
+                    write_to_log(processer_id, "internal", action , clock)
         
         if time.time() < end:
             time.sleep(end - time.time())   
