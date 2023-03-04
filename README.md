@@ -37,14 +37,6 @@ The individual log files are formatted as follows:
     - The value of the logical clock for that event on that machine
     - The global system time of the event
 
+### Jupyter notebook
 
-
-# TODO
-- debug
-- Then, run the scale model at least 5 times; write observations
-- Collect in list and plot:
-    - size of the jumps in the values for the logical clocks
-    - drift in the values of the local logical clocks in the different machines
-    - the impact different timings on such things as gaps in the logical clock values and length of the message queue.
--  Vary parameters and repeat previous step
-- Document code
+We also created a jupyter notebook (labeled analyze-data.ipynb) that provides some tools for visualizing the data from the logs. sim_advanced.py should be run first to generate the data in the logs folder.

@@ -36,6 +36,17 @@ First, we ran the scale model 5 times for one minute each time. Examining the lo
 - The queue sizes also depend in the way one would expect on the clock speeds. Faster machines will tend to have very small queue sizes, whereas slow machines tend to have larger queue sizes. This effect is more prominent when there is a significant discrepancy between the different clock speeds. Faster machines will empty the queue faster and fill up the queues of slower machines.
 
 
+### Example data
+
+As an example, we ran the scale model with the following settings:
+- Machine speeds 1, 1, 4
+- Duration of simulation was 60 seconds
+- Probability of internal event was 0.4.
+
+![Drift](drift.png)
+![Jump](jump.png)
+
+
 ### Varying the parameters
 
 Next, we ran the scale model for different settings of the following parameters:
@@ -47,3 +58,4 @@ We found that:
 - Smaller probability of an event being internal significantly exacerbated the effects described above. Namely, we observed significantly larger jumps in values of logical clock valuues, larger queue sizes and larger drift, for slower machines. This makes sense; smaller probability of internal events means more messages are sent.
 
 One of the main takeaways from this exercise is the effect of differing machine speeds on the performance of a distributed systems. Larger discrepancy in machine speeds and more frequent communication between machines can lead to significant degradation that takes the system from being ''synchronized'' to nearly ''asynchronous''. While the results of this exercise are not surprising, the scale model clearly illustrates how changing various underlying properties of the components of a distributed system influences the overall behavior and performance of the system as a whole.
+

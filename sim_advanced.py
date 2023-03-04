@@ -19,7 +19,7 @@ These encode the clock speeds and probability of internal events.
 
 # Clock speeds are integers between the these two values
 MIN_SPEED = 1
-MAX_SPEED = 2
+MAX_SPEED = 6
 
 # Number of virtual machines
 NUM_PROCESSERS = 3
@@ -47,7 +47,7 @@ SEND = FIRST + SECOND + BOTH
 
 # Host and ports on which the 3 machines listen
 HOST = "localhost"  
-PORTS = [6543, 6542, 6541]
+PORTS = [65443, 65442, 65441]
 
 
 def get_action():
